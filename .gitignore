@@ -11,3 +11,5 @@ __pycache__
 *.tar
 *.tsv
 *.csv
+*.gz
+*.csv.gz
