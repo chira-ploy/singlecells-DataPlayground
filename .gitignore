@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+.DS_Store
+
+#original dataset
+*.txt
+*.tar
+*.tsv
+*.csv
