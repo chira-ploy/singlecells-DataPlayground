@@ -31,6 +31,8 @@ def data_preprocessing(directory_path):
     sc.pp.filter_cells(adata, min_genes=200) #get rid of cells with fewer than 200 genes
     sc.pp.filter_genes(adata, min_cells=3) #get rid of genes that are found in fewer than 3 cells
     adata.var['mt'] = adata.var_names.str.startswith('mt-')  # annotate the group of mitochondrial genes as 'mt'
+    ribo_url = "http://software.broadinstitute.org/gsea/msigdb/download_geneset.jsp?geneSetName=KEGG_RIBOSOME&fileType=txt"
+    ribo_genes = pd.read_table(ribo_url, skiprows=2, header = None)
     adata.var['ribo'] = adata.var_names.isin(ribo_genes[0].values)
     sc.pp.calculate_qc_metrics(adata, qc_vars=['mt', 'ribo'], percent_top=None, log1p=False, inplace=True)
     adata = adata[(adata.obs.n_genes_by_counts > 200 ) & (adata.obs.n_genes_by_counts < 6000)]
