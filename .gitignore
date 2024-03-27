@@ -13,3 +13,7 @@ __pycache__
 *.csv
 *.gz
 *.csv.gz
+*.tar.gz
+*.mtx.gz
+*.tsv.gz
+
