@@ -16,4 +16,4 @@ __pycache__
 *.tar.gz
 *.mtx.gz
 *.tsv.gz
-
+*h5ad
