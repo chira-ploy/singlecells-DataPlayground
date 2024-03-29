@@ -17,3 +17,4 @@ __pycache__
 *.mtx.gz
 *.tsv.gz
 *h5ad
+*.model
