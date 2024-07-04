@@ -20,3 +20,4 @@ __pycache__
 *.tsv.gz
 *h5ad
 *.model
+*.h5
