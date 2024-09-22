@@ -19,6 +19,7 @@ __pycache__
 *.tar.gz
 *.mtx.gz
 *.tsv.gz
-*h5ad
+*.h5ad
 *.model
 *.h5
+*.h5mu
