@@ -22,3 +22,4 @@ __pycache__
 *h5ad
 *.model
 *.h5
+*.h5mu
