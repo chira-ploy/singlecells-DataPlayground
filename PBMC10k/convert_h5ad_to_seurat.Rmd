@@ -1,0 +1,39 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(sceasy)
+library(reticulate)
+library(Seurat)
+reticulate::use_condaenv("r_atac", required = TRUE)
+```
+
+```{r}
+reticulate::py_config()
+```
+
+```{r}
+reticulate::import("anndata")
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+sceasy::convertFormat('atac_qc_filtered.h5ad', from="anndata", to="seurat", outFile = "atac_qc_filtered.rds")
+```
+
+```{r}
+atac_seurat <- readRDS("atac_qc_filtered.rds")
+```
+
+```{r}
+atac_seurat
+```
+
+```{r}
+head(atac_seurat)
+```
