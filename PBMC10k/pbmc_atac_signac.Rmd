@@ -1,0 +1,117 @@
+---
+title: "PBMC atac analysis using Signac"
+output: html_notebook
+---
+
+```{r}
+library(Signac)
+library(Seurat)
+library(GenomicRanges)
+library(ggplot2)
+library(patchwork)
+```
+```{r}
+setwd("~/Desktop/Python/GitHub/scRNA-Scanpy-DataPlayground/PBMC10k")
+```
+
+```{r}
+# Load your Seurat object
+atac <- readRDS("atac_qc_filtered.rds")
+```
+
+```{r}
+atac
+```
+
+```{r}
+head(atac)
+```
+
+```{r}
+#get the Peak/Cell matrix (row= peak, column = cell)
+counts_matrix <- atac[["RNA"]]$counts
+head(counts_matrix)
+```
+
+```{r}
+#get metadata
+metadata <- atac@meta.data
+metadata
+```
+
+```{r}
+#load fragment files
+frag_path <- "~/Desktop/Python/GitHub/scRNA-Scanpy-DataPlayground/PBMC10k/pbmc10k/atac_fragments.tsv.gz"
+```
+
+```{r}
+library(stringr)
+library(data.table)
+```
+
+```{r}
+#load peak annotation as a GRanges object
+df_path <- "~/Desktop/Python/GitHub/scRNA-Scanpy-DataPlayground/PBMC10k/pbmc10k/atac_peak_annotation.tsv"
+peak_annotation <- fread(df_path, sep = "\t", header = TRUE, fill = TRUE)
+
+# Split the 'peak' column into 'chr', 'start', and 'end'
+peak_split <- str_split_fixed(peak_annotation$peak, "_", 3)
+colnames(peak_split) <- c("chr", "start", "end")
+
+# Convert 'start' and 'end' to numeric
+peak_split <- as.data.frame(peak_split, stringsAsFactors = FALSE)
+peak_split$start <- as.numeric(peak_split$start)
+peak_split$end <- as.numeric(peak_split$end)
+
+# Combine the split columns back with the original annotation
+peak_annotation <- cbind(peak_split, peak_annotation[, -1])  # Remove original 'peak' column
+
+# Check the updated data frame
+head(peak_annotation)
+```
+
+```{r}
+# Create a GRanges object
+peak_ranges <- makeGRangesFromDataFrame(peak_annotation,
+                                        seqnames.field = "chr",
+                                        start.field = "start",
+                                        end.field = "end",
+                                        keep.extra.columns = TRUE)
+
+# Check the GRanges object
+head(peak_ranges)
+```
+```{r}
+chrom_assay <- CreateChromatinAssay(counts = counts_matrix,
+                                    sep = c(":", "-"),
+                                    fragments = frag_path,
+                                    min.cells = 10,
+                                    min.features = 200)
+```
+
+```{r}
+pbmc <- CreateSeuratObject(counts = chrom_assay,
+                           assay = "peaks",
+                           meta.data = metadata)
+```
+
+```{r}
+pbmc[['peaks']]
+```
+
+```{r}
+Annotation(pbmc) <- peak_ranges
+```
+
+
+```{r}
+pbmc[['peaks']]
+```
+
+```{r}
+```
+
+
+```{r}
+```
+
