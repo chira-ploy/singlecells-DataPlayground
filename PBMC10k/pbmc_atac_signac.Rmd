@@ -125,18 +125,34 @@ pbmc <- NucleosomeSignal(object = pbmc)
 ## 2.2. Transcriptional start site (TSS) enrichment score
 ```{r}
 # compute TSS enrichment score per cell
-pbmc <- TSSEnrichment(object = pbmc, fast = FALSE)
+pbmc <- TSSEnrichment(object = pbmc)
+```
+```{r}
+#check metadata
+pbmc@meta.data
 ```
 
 ## 2.3. Total number of fragments in peaks
-## 2.4. Fraction of fragments in peaks
-## 2.5. 
+#we have column "nCount_peaks"
 
+## 2.4. Fraction of fragments in peaks
 ```{r}
-head(Annotation(pbmc))
+#pbmc$pct_reads_in_peaks <- pbmc$peak_region_fragments / pbmc$passed_filters * 100
+#I cannot calculate this QC matric because I don't have the column "passed_filters"
 ```
 
+## 2.5. Ratio reads in genomic blacklist regions
 
 ```{r}
+pbmc$blacklist_ratio <- FractionCountsInRegion(
+  object = pbmc, 
+  assay = 'peaks',
+  regions = blacklist_hg38_unified
+)
+```
+
+```{r}
+#check metadata
+pbmc@meta.data
 ```
 
