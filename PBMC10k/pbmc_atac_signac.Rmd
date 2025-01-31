@@ -1,7 +1,9 @@
 ---
 title: "PBMC atac analysis using Signac"
-output: html_notebook
+output: html_document
 ---
+
+# 1. Pre-processing
 
 ```{r}
 library(Signac)
@@ -24,19 +26,19 @@ atac
 ```
 
 ```{r}
-head(atac)
+head(atac, 5)
 ```
 
 ```{r}
 #get the Peak/Cell matrix (row= peak, column = cell)
 counts_matrix <- atac[["RNA"]]$counts
-head(counts_matrix)
+#head(counts_matrix, 3)
 ```
 
 ```{r}
 #get metadata
 metadata <- atac@meta.data
-metadata
+head(metadata, 5)
 ```
 
 ```{r}
@@ -45,42 +47,35 @@ frag_path <- "~/Desktop/Python/GitHub/scRNA-Scanpy-DataPlayground/PBMC10k/pbmc10
 ```
 
 ```{r}
-library(stringr)
-library(data.table)
+library(BiocFileCache)
+library(AnnotationHub)
+library(ensembldb)
+```
+
+### annotation
+```{r}
+ah <- AnnotationHub()
+# Search for the Ensembl 98 EnsDb for Homo sapiens on AnnotationHub
+query(ah, "EnsDb.Hsapiens.v98")
 ```
 
 ```{r}
-#load peak annotation as a GRanges object
-df_path <- "~/Desktop/Python/GitHub/scRNA-Scanpy-DataPlayground/PBMC10k/pbmc10k/atac_peak_annotation.tsv"
-peak_annotation <- fread(df_path, sep = "\t", header = TRUE, fill = TRUE)
-
-# Split the 'peak' column into 'chr', 'start', and 'end'
-peak_split <- str_split_fixed(peak_annotation$peak, "_", 3)
-colnames(peak_split) <- c("chr", "start", "end")
-
-# Convert 'start' and 'end' to numeric
-peak_split <- as.data.frame(peak_split, stringsAsFactors = FALSE)
-peak_split$start <- as.numeric(peak_split$start)
-peak_split$end <- as.numeric(peak_split$end)
-
-# Combine the split columns back with the original annotation
-peak_annotation <- cbind(peak_split, peak_annotation[, -1])  # Remove original 'peak' column
-
-# Check the updated data frame
-head(peak_annotation)
+ensdb_v98 <- ah[["AH75011"]]
 ```
 
 ```{r}
-# Create a GRanges object
-peak_ranges <- makeGRangesFromDataFrame(peak_annotation,
-                                        seqnames.field = "chr",
-                                        start.field = "start",
-                                        end.field = "end",
-                                        keep.extra.columns = TRUE)
-
-# Check the GRanges object
-head(peak_ranges)
+# extract gene annotations from EnsDb
+annotations <- GetGRangesFromEnsDb(ensdb = ensdb_v98)
 ```
+```{r}
+# Convert to UCSC style
+seqlevelsStyle(annotations) <- "UCSC"
+```
+
+```{r}
+annotations
+```
+
 ```{r}
 chrom_assay <- CreateChromatinAssay(counts = counts_matrix,
                                     sep = c(":", "-"),
@@ -98,17 +93,47 @@ pbmc <- CreateSeuratObject(counts = chrom_assay,
 ```{r}
 pbmc[['peaks']]
 ```
-
 ```{r}
-Annotation(pbmc) <- peak_ranges
+#add gene information to the object
+Annotation(pbmc) <- annotations
 ```
-
 
 ```{r}
 pbmc[['peaks']]
 ```
 
 ```{r}
+granges(pbmc)
+```
+```{r}
+#remove the features that correspond to chromosome scaffolds e.g. (KI270713.1) or other sequences instead of the (22+2) standard chromosomes.
+peaks.keep <- seqnames(granges(pbmc)) %in% standardChromosomes(granges(pbmc))
+pbmc <- pbmc[as.vector(peaks.keep), ]
+```
+
+```{r}
+granges(pbmc)
+```
+
+# 2. QC metrics
+## 2.1. Nucleosome banding pattern (nucleosome_signal)
+```{r}
+# compute nucleosome signal score per cell
+pbmc <- NucleosomeSignal(object = pbmc)
+```
+
+## 2.2. Transcriptional start site (TSS) enrichment score
+```{r}
+# compute TSS enrichment score per cell
+pbmc <- TSSEnrichment(object = pbmc, fast = FALSE)
+```
+
+## 2.3. Total number of fragments in peaks
+## 2.4. Fraction of fragments in peaks
+## 2.5. 
+
+```{r}
+head(Annotation(pbmc))
 ```
 
 
